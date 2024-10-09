@@ -15,23 +15,16 @@ import org.junit.jupiter.api.TestMethodOrder;
 @TestMethodOrder(MethodOrderer.Random.class)
 public class ProjectTest {
 
-    // TODO: figure out: at least one unit test module for each undocumented API discovered during exploratory testing.
-    // TODO: find a bug:
-    // Identify bugs in the API implementation if the actual behavior is different from the documented behavior.
-    // include two separate modules one showing the expected behavior failing and one showing the actual behavior working
-    // TOODO: Confirm that each API can generate payloads in JSON or XML
-    // TODO: Confirm that command line queries function correctly.
-    // TODO: Ensure the system is ready to be tested
-    // TODO: Save the system state
-    // Additional Unit Test Considerations
-    // Ensure unit tests fail if service is not running.
-
     private static HttpClient client;
 
     @BeforeAll
     public static void setup() {
         client = HttpClient.newHttpClient();
     }
+
+    /******************************
+     * TESTS for /projects ENDPOINTS *
+     * ****************************/
 
     @Test
     public void testGetProjects() throws IOException, InterruptedException {
@@ -363,6 +356,7 @@ public class ProjectTest {
     }
 
     /*
+    BUG
     Notice how this test is incorrect. Project with Id 10 does not exist, while a list of tasks
     with a relationship with nonexistent project is still displayed
      */
@@ -465,6 +459,7 @@ public class ProjectTest {
     }
 
     /*
+    BUG
     Notice how this test is incorrect. Project with Id 10 does not exist, while a list of categories
     with a relationship with nonexistent project is still displayed
      */
