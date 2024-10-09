@@ -1,4 +1,5 @@
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.net.URI;
@@ -9,8 +10,22 @@ import java.net.http.HttpResponse.BodyHandlers;
 import static org.junit.jupiter.api.Assertions.*;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import org.junit.jupiter.api.TestMethodOrder;
 
+@TestMethodOrder(MethodOrderer.Random.class)
 public class ProjectTest {
+
+    // TODO: figure out: at least one unit test module for each undocumented API discovered during exploratory testing.
+    // TODO: find a bug:
+    // Identify bugs in the API implementation if the actual behavior is different from the documented behavior.
+    // include two separate modules one showing the expected behavior failing and one showing the actual behavior working
+    // TOODO: Confirm that each API can generate payloads in JSON or XML
+    // TODO: Confirm that command line queries function correctly.
+    // TODO: Ensure the system is ready to be tested
+    // TODO: Save the system state
+    // Additional Unit Test Considerations
+    // Ensure unit tests fail if service is not running.
+
     private static HttpClient client;
 
     @BeforeAll
@@ -47,7 +62,32 @@ public class ProjectTest {
     }
 
     @Test
-    public void testPostProjects() throws IOException, InterruptedException {
+    public void testPostProjectsXmlBody() throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:4567/projects"))
+                .header("Content-Type", "application/xml")
+                .POST(HttpRequest.BodyPublishers.ofString("<project><title>test_project</title></project>"))
+                .build();
+        HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+
+        assertEquals(201, response.statusCode());
+        assertTrue(response.body().contains("test_project"));
+
+        assertNotNull(response.body());
+
+        // remove what was created
+        JsonObject jsonObject = JsonParser.parseString(response.body()).getAsJsonObject();
+        String id = jsonObject.get("id").getAsString();
+        request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:4567/projects/" + id))
+                .header("Content-Type", "application/json")
+                .DELETE()
+                .build();
+        client.send(request, BodyHandlers.ofString());
+    }
+
+    @Test
+    public void testPostProjectsJsonBody() throws IOException, InterruptedException {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("http://localhost:4567/projects"))
                 .header("Content-Type", "application/json")
@@ -72,11 +112,86 @@ public class ProjectTest {
     }
 
     @Test
-    public void testGetProjectById() throws IOException, InterruptedException {
+    public void testPostProjectsMalformedJsonBody() throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:4567/projects"))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString("{")) // malformed json
+                .build();
+        HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+
+        assertEquals(400, response.statusCode());
+        assertNotNull(response.body());
+    }
+
+    @Test
+    public void testPostProjectsMalformedXmlBody() throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:4567/projects"))
+                .header("Content-Type", "application/xml")
+                .POST(HttpRequest.BodyPublishers.ofString("<project><title>test_project</title>")) // malformed json
+                .build();
+        HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+
+        assertEquals(400, response.statusCode());
+        assertNotNull(response.body());
+    }
+
+    @Test
+    public void testPostProjectsWithEmptyRequestBody() throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:4567/projects"))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString("{}"))
+                .build();
+        HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+
+        assertEquals(201, response.statusCode());
+
+        assertNotNull(response.body());
+
+        // remove what was created
+        JsonObject jsonObject = JsonParser.parseString(response.body()).getAsJsonObject();
+        String id = jsonObject.get("id").getAsString();
+        request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:4567/projects/" + id))
+                .header("Content-Type", "application/json")
+                .DELETE()
+                .build();
+        client.send(request, BodyHandlers.ofString());
+    }
+
+    @Test
+    public void testGetProjectByIdJsonBody() throws IOException, InterruptedException {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("http://localhost:4567/projects"))
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString("{\"title\":\"test_project\"}"))
+                .build();
+        HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+
+        JsonObject jsonObject = JsonParser.parseString(response.body()).getAsJsonObject();
+        String id = jsonObject.get("id").getAsString();
+
+        request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:4567/projects/" + id))
+                .GET()
+                .build();
+        client.send(request, BodyHandlers.ofString());
+        response = client.send(request, BodyHandlers.ofString());
+
+        assertEquals(200, response.statusCode());
+        assertTrue(response.body().contains("test_project"));
+
+        assertNotNull(response.body());
+    }
+
+    @Test
+    public void testGetProjectByIdXmlBody() throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:4567/projects"))
+                .header("Content-Type", "application/xml")
+                .POST(HttpRequest.BodyPublishers.ofString("<project><title>test_project</title></project>"))
                 .build();
         HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
 
@@ -110,7 +225,7 @@ public class ProjectTest {
     }
 
     @Test
-    public void testPutProjectById() throws IOException, InterruptedException {
+    public void testPutProjectByIdJsonBody() throws IOException, InterruptedException {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("http://localhost:4567/projects"))
                 .header("Content-Type", "application/json")
@@ -139,6 +254,51 @@ public class ProjectTest {
                 .DELETE()
                 .build();
         client.send(request, BodyHandlers.ofString());
+    }
+
+    @Test
+    public void testPutProjectByIdXmlBody() throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:4567/projects"))
+                .header("Content-Type", "application/xml")
+                .POST(HttpRequest.BodyPublishers.ofString("<project><title>test_project</title></project>"))
+                .build();
+        HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+        JsonObject jsonObject = JsonParser.parseString(response.body()).getAsJsonObject();
+        String id = jsonObject.get("id").getAsString();
+
+        request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:4567/projects/" + id))
+                .header("Content-Type", "application/json")
+                .PUT(HttpRequest.BodyPublishers.ofString("{\"title\":\"test_project_new_name\"}"))
+                .build();
+        response = client.send(request, BodyHandlers.ofString());
+
+        assertEquals(200, response.statusCode());
+        assertTrue(response.body().contains("test_project_new_name"));
+
+        assertNotNull(response.body());
+
+        // remove what was changed
+        request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:4567/projects/" + id))
+                .header("Content-Type", "application/json")
+                .DELETE()
+                .build();
+        client.send(request, BodyHandlers.ofString());
+    }
+
+    @Test
+    public void testPutProjectByIdThatDoesNotExist() throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:4567/projects/10"))
+                .header("Content-Type", "application/json")
+                .PUT(HttpRequest.BodyPublishers.ofString("{\"title\":\"test_project_new_name\"}"))
+                .build();
+        HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+
+        assertEquals(404, response.statusCode());
+        assertNotNull(response.body());
     }
 
     @Test
@@ -177,6 +337,18 @@ public class ProjectTest {
     }
 
     @Test
+    public void testDeleteProjectByIdThatDoesNotExist() throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:4567/projects/10"))
+                .header("Content-Type", "application/json")
+                .DELETE()
+                .build();
+        HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+        assertEquals(404, response.statusCode());
+        assertNotNull(response.body());
+    }
+
+    @Test
     public void testGetProjectTasksByProjectId() throws IOException, InterruptedException {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("http://localhost:4567/projects/1/tasks"))
@@ -187,6 +359,31 @@ public class ProjectTest {
 
         assertEquals(200, response.statusCode());
 
+        assertNotNull(response.body());
+    }
+
+    /*
+    Notice how this test is incorrect. Project with Id 10 does not exist, while a list of tasks
+    with a relationship with nonexistent project is still displayed
+     */
+    @Test
+    public void testGetProjectTasksByProjectIdThatDoesNotExist() throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:4567/projects/10"))
+                .GET()
+                .build();
+        HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+        assertEquals(404, response.statusCode());
+
+        request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:4567/projects/10/tasks"))
+                .GET()
+                .build();
+
+        response = client.send(request, BodyHandlers.ofString());
+
+        assertNotEquals(404, response.statusCode());
+        assertEquals(200, response.statusCode());
         assertNotNull(response.body());
     }
 
@@ -213,14 +410,41 @@ public class ProjectTest {
     }
 
     @Test
-    public void testDeleteProjectTaskThatDoesNotExist() throws IOException, InterruptedException {
+    public void testPostProjectTasksByProjectIdThatDoesNotExist() throws IOException, InterruptedException {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("http://localhost:4567/projects/10"))
+                .GET()
+                .build();
+        HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+        assertEquals(404, response.statusCode());
+
+        request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:4567/projects/10/tasks"))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString("{\"title\":\"test_task\"}"))
+                .build();
+        response = client.send(request, BodyHandlers.ofString());
+
+        assertEquals(404, response.statusCode());
+        assertNotNull(response.body());
+    }
+
+    @Test
+    public void testDeleteProjectTaskByTaskIdThatDoesNotExist() throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:4567/projects/1/Tasks/10"))
+                .GET()
+                .build();
+        HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+        assertEquals(404, response.statusCode());
+
+        request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:4567/projects/1/Tasks/10"))
                 .header("Content-Type", "application/json")
                 .DELETE()
                 .build();
         client.send(request, BodyHandlers.ofString());
-        HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+        response = client.send(request, BodyHandlers.ofString());
 
         assertEquals(404, response.statusCode());
         assertNotNull(response.body());
@@ -237,6 +461,31 @@ public class ProjectTest {
 
         assertEquals(200, response.statusCode());
 
+        assertNotNull(response.body());
+    }
+
+    /*
+    Notice how this test is incorrect. Project with Id 10 does not exist, while a list of categories
+    with a relationship with nonexistent project is still displayed
+     */
+    @Test
+    public void testGetProjectCategoriesByProjectIdThatDoesNotExist() throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:4567/projects/10"))
+                .GET()
+                .build();
+        HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+        assertEquals(404, response.statusCode());
+
+        request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:4567/projects/10/categories"))
+                .GET()
+                .build();
+
+        response = client.send(request, BodyHandlers.ofString());
+
+        assertNotEquals(404, response.statusCode());
+        assertEquals(200, response.statusCode());
         assertNotNull(response.body());
     }
 
@@ -263,5 +512,18 @@ public class ProjectTest {
                 .DELETE()
                 .build();
         client.send(request, BodyHandlers.ofString());
+    }
+
+    @Test
+    public void testPostProjectCategoriesByProjectIdThatDoesNotExist() throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:4567/projects/10/categories"))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString("{\"title\":\"test_category\"}"))
+                .build();
+        HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+
+        assertEquals(404, response.statusCode());
+        assertNotNull(response.body());
     }
 }
