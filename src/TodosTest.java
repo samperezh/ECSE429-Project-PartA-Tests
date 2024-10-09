@@ -15,9 +15,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @TestMethodOrder(MethodOrderer.Random.class)
 public class TodosTest {
-    // TODO: Confirm that each API can generate payloads in JSON or XML
-    // TODO: Confirm that command line queries function correctly.
-
     private static HttpClient client;
 
     @BeforeAll
