@@ -1,7 +1,7 @@
 # ECSE 429 Project Part A
 ## October 8th, 2024
 
-Note that this code was written and tested on macOS 13.2.1 (M1 chip) through VSCode terminal.
+Note that this code was written and tested on macOS 13.2.1 (M1 chip) through VSCode + IntelliJ terminal.
 
 ## Context
 This repo includes unit tests for a "rest api todo manager", which can be found online at: [link](https://github.com/eviltester/thingifier/releases)
