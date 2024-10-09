@@ -21,6 +21,6 @@ public class SystemTest {
 
         HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
 
-        assertEquals(200, response.statusCode());
+        assertEquals(302, response.statusCode());
     }
 }
