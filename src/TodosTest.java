@@ -1,10 +1,8 @@
-import org.apiguardian.api.API;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
-
+import org.junit.jupiter.api.TestMethodOrder;
 import com.google.gson.JsonParser;
-
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -12,30 +10,25 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
+
 import static org.junit.jupiter.api.Assertions.*;
 
+@TestMethodOrder(MethodOrderer.Random.class)
 public class TodosTest {
     // TODO: figure out: at least one unit test module for each undocumented API discovered during exploratory testing.
     // TODO: find a bug:
         // Identify bugs in the API implementation if the actual behavior is different from the documented behavior.
         // include two separate modules one showing the expected behavior failing and one showing the actual behavior working
 
-    // TOODO: Confirm that each API can generate payloads in JSON or XML
+    // TODO: Confirm that each API can generate payloads in JSON or XML
     // TODO: Confirm that command line queries function correctly.
-    // TODO: Confirm return codes are correctly generated.
 
-
-    // TODO: make sure they run in any order
-    // TODO: Restore the system to the initial state after each test
     // TODO: Ensure the system is ready to be tested
-    // TODO: Save the system state
-    // TODO: Set up the initial conditions for the test
 
     // Additional Unit Test Considerations
-    // Ensure unit tests fail if service is not running.
-    // Include at least one test to see what happens if a JSON payload is malformed.
-    // Include at least one test to see what happens if an XML payload is malformed.
-    // For each API identified in the exploratory testing include tests of invalid operations, 
+    // TODO: Include at least one test to see what happens if a JSON payload is malformed.
+    // TODO: Include at least one test to see what happens if an XML payload is malformed.
+    // TODO: For each API identified in the exploratory testing include tests of invalid operations, 
         // for example, attempting to delete an object which has already been deleted.
 
     private static HttpClient client;
@@ -85,6 +78,7 @@ public class TodosTest {
     // With this endpoint, we should be able to create todo without a ID using the field values in the body of the message
     @Test
     public void testPostTodos() throws IOException, InterruptedException {
+        // MAIN TEST
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("http://localhost:4567/todos"))
                 .POST(BodyPublishers.ofString( "{ \"title\": \"New Todo\"}"))
@@ -96,7 +90,7 @@ public class TodosTest {
         
         assertNotNull(response.body().contains("New Todo"));
 
-        // Restore the system to the initial state after each test (POST, PUT, DELETE)
+        // RESTORE THE SYSTEM TO INITIAL STATE
         String id = JsonParser.parseString(response.body()).getAsJsonObject().get("id").getAsString();
         HttpRequest deleteRequest = HttpRequest.newBuilder()
                 .uri(URI.create("http://localhost:4567/todos/" + id))
@@ -141,8 +135,6 @@ public class TodosTest {
 
         assertEquals(200, response.statusCode()); 
         
-        assertEquals(200, response.statusCode()); 
-        
         assertNotNull(response.headers());
     }
 
@@ -150,8 +142,23 @@ public class TodosTest {
     // Endpoint should amend a specific instances of todo using a id with a body containing the fields to amend
     @Test
     public void testPostTodosId() throws IOException, InterruptedException {
+        // TEST PREP
+        // Create a new instance to test the post 
+        // we will modify it and delete it in order for the system to be restored to the initial state by the end of this test
+        HttpRequest postRequest = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:4567/todos"))
+                .POST(BodyPublishers.ofString( "{ \"title\": \"New Todo\"}"))
+                .build();
+
+        HttpResponse<String> postResponse = client.send(postRequest, BodyHandlers.ofString());
+
+        assertEquals(201, postResponse.statusCode()); 
+        
+        String id = JsonParser.parseString(postResponse.body()).getAsJsonObject().get("id").getAsString();
+        
+        // MAIN TEST
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("http://localhost:4567/todos/2"))
+                .uri(URI.create("http://localhost:4567/todos/" + id))
                 .POST(BodyPublishers.ofString( "{ \"title\": \"Update title\"}"))
                 .build();
 
@@ -160,14 +167,37 @@ public class TodosTest {
         assertEquals(200, response.statusCode()); 
         
         assertNotNull(response.body().contains("Update title"));
+
+        // RESTORE THE SYSTEM TO INITIAL STATE
+        HttpRequest deleteRequest = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:4567/todos/" + id))
+                .method("DELETE", BodyPublishers.noBody())
+                .build();
+        HttpResponse<String> deleteResponse = client.send(deleteRequest, BodyHandlers.ofString());
+        assertEquals(200, deleteResponse.statusCode());  
     }
 
     // Test for PUT /todos/:id
     // Endpoint should amend a specific instances of todo using a id with a body containing the fields to amend
     @Test
     public void testPutTodosId() throws IOException, InterruptedException {
+        // TEST PREP
+        // Create a new instance to test the post 
+        // we will modify it and delete it in order for the system to be restored to the initial state by the end of this test
+        HttpRequest postRequest = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:4567/todos"))
+                .POST(BodyPublishers.ofString( "{ \"title\": \"New Todo\"}"))
+                .build();
+
+        HttpResponse<String> postResponse = client.send(postRequest, BodyHandlers.ofString());
+
+        assertEquals(201, postResponse.statusCode()); 
+        
+        String id = JsonParser.parseString(postResponse.body()).getAsJsonObject().get("id").getAsString();
+
+        // MAIN TEST
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("http://localhost:4567/todos/2"))
+                .uri(URI.create("http://localhost:4567/todos/" + id))
                 .PUT(BodyPublishers.ofString( "{ \"title\": \"Put title\"}"))
                 .build();
 
@@ -176,14 +206,35 @@ public class TodosTest {
         assertEquals(200, response.statusCode()); 
         
         assertNotNull(response.body().contains("Put title"));
+
+         // RESTORE THE SYSTEM TO INITIAL STATE
+        HttpRequest deleteRequest = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:4567/todos/" + id))
+                .method("DELETE", BodyPublishers.noBody())
+                .build();
+        HttpResponse<String> deleteResponse = client.send(deleteRequest, BodyHandlers.ofString());
+        assertEquals(200, deleteResponse.statusCode());
     }
 
     // Test for DELETE /todos/:id
     // Endpoint should delete a specific instances of todo using a id
     @Test
     public void testDeleteTodosId() throws IOException, InterruptedException {
+        // TEST PREP
+        //Create a new instance to test the delete - this way the system will be restored to the initial state
+        HttpRequest postRequest = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:4567/todos"))
+                .POST(BodyPublishers.ofString( "{ \"title\": \"Delete this\"}"))
+                .build();
+        HttpResponse<String> postResponse = client.send(postRequest, BodyHandlers.ofString());
+        assertEquals(201, postResponse.statusCode()); 
+
+        String id = JsonParser.parseString(postResponse.body()).getAsJsonObject().get("id").getAsString();
+
+        // MAIN TEST
+
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("http://localhost:4567/todos/2"))
+                .uri(URI.create("http://localhost:4567/todos/" + id))
                 .method("DELETE", BodyPublishers.noBody())
                 .build();
 
