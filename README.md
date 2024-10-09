@@ -10,7 +10,7 @@ This repo includes unit tests for a "rest api todo manager", which can be found 
 
 1. Download the "rest api todo manager".
 2. Change into directory of the application.
-3. Run java -jar runTodoManagerRestAPI-1.5.5.jar in that director. The application is now running.
+3. Run ````java -jar runTodoManagerRestAPI-1.5.5.jar```` in that directory. The application is now running.
 4. Search [link](http://localhost:4567/docs) on your browser, documentation of the application should be there if application is running correctly.
 5. Run unit tests on IDE of choice.
 
