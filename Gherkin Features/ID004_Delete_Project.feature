@@ -5,6 +5,10 @@ I want to delete an existing project
 So that I can remove a project from the system when no longer needed
 
 
+Background:
+Given the REST API To-Do List Manager application is running
+
+
 Scenario Outline: Delete an existing project by id (Normal Flow)
 
 Given the following projects exist in the system:

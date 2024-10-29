@@ -4,6 +4,9 @@ As a REST API To-Do List Manager user
 I want to retrieve tasks for a project
 So that I can view details of tasks for a project
 
+Background:
+Given the REST API To-Do List Manager application is running
+
 
 Scenario Outline: Retrieve all tasks associated to a specific existing project (Normal Flow)
 

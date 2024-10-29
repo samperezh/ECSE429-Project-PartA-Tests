@@ -5,6 +5,10 @@ I want to edit an existing project
 So that I can update the details of a project
 
 
+Background:
+Given the REST API To-Do List Manager application is running
+
+
 Scenario Outline: Edit the title of an existing project (Normal Flow)
 
 Given the following projects exist in the system:

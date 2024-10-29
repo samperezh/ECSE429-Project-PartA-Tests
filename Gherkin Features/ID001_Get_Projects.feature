@@ -5,6 +5,10 @@ I want to retrieve project information
 So that I can view details of one or more projects
 
 
+Background:
+Given the REST API To-Do List Manager application is running
+
+
 Scenario Outline: Retrieve all projects (Normal Flow)
 
 Given the following projects exist in the system:

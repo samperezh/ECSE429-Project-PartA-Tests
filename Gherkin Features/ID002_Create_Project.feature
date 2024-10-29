@@ -5,6 +5,10 @@ I want to create a new project
 So that I can organize my tasks into a new project
 
 
+Background:
+Given the REST API To-Do List Manager application is running
+
+
 Scenario Outline: Create a new project with title (Normal Flow)
 
 Given the following projects exist in the system:
